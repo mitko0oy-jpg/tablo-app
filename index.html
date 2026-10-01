@@ -437,8 +437,10 @@ function renderHome(m){
   const cr=div(T.orders,T.lpv), aov=div(T.revenue,T.orders), cpa=div(T.spend,T.orders), roas=div(T.revenue,T.spend), poas=div(T.profit,T.spend), cpm=div(T.spend*1000,T.impr);
   const beCpa=div(T.revenue-T.prod-T.other,T.orders), beRoas=div(T.revenue,T.revenue-T.prod-T.other), margin=div(T.profit,T.revenue);
   const st = g => has ? (g?"good":"bad") : "";
+  const profitAfterTax = T.profit * 0.8;
   $("hero").innerHTML =
     card("Печалба преди ДДС", eur(T.profit), Number.isFinite(margin)?`Марж <b>${pct(margin)}</b> от оборота`:"Обща печалба за периода", st(T.profit>=0)) +
+    card("Печалба след ДДС (20%)", eur(profitAfterTax), Number.isFinite(margin)?`Марж <b>${pct(profitAfterTax/T.revenue)}</b> от оборота`:"Печалба след данъци", st(profitAfterTax>=0)) +
     card("Оборот", eur(T.revenue), m.useCorr && T.manual ? `Пиксел: ${eur(T.pxR)} · коригирани дни: <b>${T.manual}</b>` : "Оборот", "accent");
   $("kpis").innerHTML = [
     card("Рекламен разход", eur(T.spend), "Общо за рекламите"),
@@ -497,8 +499,9 @@ function renderDays(m){
     : "При филтър по продукт виждаш само данни от пиксела. Корекциите по дни важат за целия акаунт.";
   if (!m.accts.length){ $("days").innerHTML = `<div class="empty">Няма включени акаунти. Включи поне един в Настройки.</div>`; return; }
   const T=m.T;
+  const profitAfterTax = T.profit * 0.8;
   let h = `<div class="day totals"><div class="day-h"><b>Общо за периода</b><span class="p ${T.profit>=0?"pos":"neg"}">${signEur(T.profit)}</span></div>
-    <div class="meta"><span>Реклама <b>${eur(T.spend)}</b></span><span>Поръчки <b>${int(T.orders)}</b></span><span>Оборот <b>${eur(T.revenue)}</b></span><span>ROAS <b>${ratio(div(T.revenue,T.spend))}</b></span></div></div>`;
+    <div class="meta"><span>Реклама <b>${eur(T.spend)}</b></span><span>Поръчки <b>${int(T.orders)}</b></span><span>Оборот <b>${eur(T.revenue)}</b></span><span>ROAS <b>${ratio(div(T.revenue,T.spend))}</b></span><span>Печалба след ДДС <b class="${profitAfterTax>=0?"pos":"neg"}">${signEur(profitAfterTax)}</b></span></div></div>`;
   for (const d of m.days.slice().reverse()){
     const rs = m.daily.filter(r=>r.date===d);
     const sp=rs.reduce((s,r)=>s+r.spend,0), rv=rs.reduce((s,r)=>s+r.revenue,0), pr=rs.reduce((s,r)=>s+r.profit,0), o=rs.reduce((s,r)=>s+r.orders,0), l=rs.reduce((s,r)=>s+r.lpv,0);
