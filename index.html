@@ -606,6 +606,7 @@ function renderSettings(){
     <div class="field"><label for="mc-chatgpt">ChatGPT €</label><input type="text" inputmode="decimal" id="mc-chatgpt" data-mc="chatgpt" value="${esc(numStr(mc.chatgpt||""))}" placeholder="0,00"></div>
     <div class="field"><label for="mc-convertbuilder">ConvertBuilder €</label><input type="text" inputmode="decimal" id="mc-convertbuilder" data-mc="convertBuilder" value="${esc(numStr(mc.convertBuilder||""))}" placeholder="0,00"></div>
   `;
+  $("tokenList").innerHTML = `<button class="btn" type="button" id="metaLoginBtn">🔐 Логин с Meta</button>`;
 }
 
 /* ---------- Meta Graph API ---------- */
