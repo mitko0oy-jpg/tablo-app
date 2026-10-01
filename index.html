@@ -252,6 +252,10 @@ ol.steps li::marker{color:var(--muted)}
     </div>
 
     <div class="set">
+      <div class="view" id="monthlyList" style="gap:8px"></div>
+    </div>
+
+    <div class="set">
       <h3>Архив</h3>
       <p>Настройките и корекциите се пазят в този браузър. Свали архив, за да ги пренесеш на друго устройство. Архивът не съдържа токена.</p>
       <div class="row">
@@ -338,6 +342,7 @@ const S = Object.assign({
   token:"", apiVersion:"v25.0",
   accounts: clone(DEFAULT_ACCOUNTS), products: [],
   corr: {},                       // "acct|YYYY-MM-DD" -> {o,r,x}
+  monthlyCosts: {insurance:190, accounting:100, middleware:130, claude:100, chatgpt:100, convertBuilder:90},
   ui: {period:"today", from:null, to:null, acct:"all", product:"all", tab:"home"}
 }, lsGet(LS_KEY, {}));
 S.ui = Object.assign({period:"today", from:null, to:null, acct:"all", product:"all", tab:"home"}, S.ui||{});
@@ -373,6 +378,7 @@ function compute(){
   const aov = {};
   for (const a of accts){ let o=0,v=0; for (const d of days){ const c=cell[a.id+"|"+d]; o+=c.pxO; v+=c.pxR; } aov[a.id]=o? v/o : NaN; }
   const daily = [];
+  const monthlyDailyOther = getDailyFromMonthly(days.length);
   for (const d of days) for (const a of accts){
     const c = cell[a.id+"|"+d];
     const k = useCorr ? S.corr[ckey(a.id,d)] : null;
@@ -384,7 +390,7 @@ function compute(){
     else revenue = c.pxR;
     const unit = c.pxO ? c.pxCost/c.pxO : (a.cost||0);
     const prod = orders*unit;
-    const other = useCorr ? (xSet ? k.x : (a.other||0)) : 0;
+    const other = useCorr ? (xSet ? k.x : (a.other||0)) + monthlyDailyOther : 0;
     daily.push({...c, orders, revenue, prod, other, profit: revenue-c.spend-prod-other, oSet, rSet, xSet});
   }
   const T = daily.reduce((t,r)=>{ for (const k of ["spend","impr","lpv","pxO","pxR","orders","revenue","prod","other","profit"]) t[k]+=r[k]; if (r.oSet||r.rSet) t.manual++; return t; },
@@ -548,6 +554,8 @@ function renderBanners(){
 }
 
 /* ---------- settings ---------- */
+const getMonthlyTotal = () => Object.values(S.monthlyCosts||{}).reduce((s,v)=>s+(parseNum(v)||0),0);
+const getDailyFromMonthly = (days=30) => getMonthlyTotal() / Math.max(1,days);
 function renderSettings(){
   const ts = $("tokenStatus");
   ts.innerHTML = tokenState==="ok" ? `<span class="ok">Свързано ✓</span> <span class="hint">${available?available.length+" рекламни акаунта с достъп":""}</span>`
@@ -571,6 +579,16 @@ function renderSettings(){
       <div class="field keys"><label for="pk-${esc(p.id)}">Ключови думи в името на кампанията</label><input type="text" id="pk-${esc(p.id)}" data-p="${esc(p.id)}" data-k="keys" value="${esc(p.keys||"")}" placeholder="НВО, Карти"></div>
       <div><button class="btn small danger" type="button" data-delp="${esc(p.id)}">Премахни</button></div>
     </div>`).join("") : `<p>Няма добавени продукти.</p>`;
+  const mc = S.monthlyCosts||{}; const mcTotal = getMonthlyTotal();
+  $("monthlyList").innerHTML = `
+    <h3>Месячни разходи - Общо: ${eur(mcTotal)} (${eur(mcTotal/30)}/ден)</h3>
+    <div class="field"><label for="mc-insurance">Осигуровки €</label><input type="text" inputmode="decimal" id="mc-insurance" data-mc="insurance" value="${esc(numStr(mc.insurance||""))}" placeholder="0,00"></div>
+    <div class="field"><label for="mc-accounting">Счетоводство €</label><input type="text" inputmode="decimal" id="mc-accounting" data-mc="accounting" value="${esc(numStr(mc.accounting||""))}" placeholder="0,00"></div>
+    <div class="field"><label for="mc-middleware">Middleware €</label><input type="text" inputmode="decimal" id="mc-middleware" data-mc="middleware" value="${esc(numStr(mc.middleware||""))}" placeholder="0,00"></div>
+    <div class="field"><label for="mc-claude">Claude €</label><input type="text" inputmode="decimal" id="mc-claude" data-mc="claude" value="${esc(numStr(mc.claude||""))}" placeholder="0,00"></div>
+    <div class="field"><label for="mc-chatgpt">ChatGPT €</label><input type="text" inputmode="decimal" id="mc-chatgpt" data-mc="chatgpt" value="${esc(numStr(mc.chatgpt||""))}" placeholder="0,00"></div>
+    <div class="field"><label for="mc-convertbuilder">ConvertBuilder €</label><input type="text" inputmode="decimal" id="mc-convertbuilder" data-mc="convertBuilder" value="${esc(numStr(mc.convertBuilder||""))}" placeholder="0,00"></div>
+  `;
 }
 
 /* ---------- Meta Graph API ---------- */
@@ -713,6 +731,8 @@ $("addProd").addEventListener("click", ()=>{ const p={id:"p"+Date.now().toString
 $("prodList").addEventListener("input", e=>{ const el=e.target; if (!el.dataset.p) return; const p=S.products.find(x=>x.id===el.dataset.p); if (!p) return; p[el.dataset.k] = el.dataset.k==="cost" ? (parseNum(el.value)??0) : el.value; save(); });
 $("prodList").addEventListener("change", ()=>render());
 $("prodList").addEventListener("click", e=>{ const b=e.target.closest("[data-delp]"); if (!b) return; S.products=S.products.filter(p=>p.id!==b.dataset.delp); save(); renderSettings(); render(); });
+$("monthlyList").addEventListener("input", e=>{ const el=e.target; if (!el.dataset.mc) return; if (!S.monthlyCosts) S.monthlyCosts={}; S.monthlyCosts[el.dataset.mc]=parseNum(el.value)||0; save(); });
+$("monthlyList").addEventListener("change", ()=>{ renderSettings(); render(); });
 
 $("exportBtn").addEventListener("click", ()=>{
   const out = clone(S); delete out.token;
