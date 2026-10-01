@@ -338,9 +338,26 @@ function periodRange(){
 }
 
 /* ---------- state ---------- */
+const DEFAULT_PRODUCTS = [
+  {id:"p1",name:"BeeVenom Care Gel",cost:12.37,keys:"beevenom,care gel"},
+  {id:"p2",name:"BeeVenom Care Gel 2+1",cost:17.89,keys:"2+1,двойка"},
+  {id:"p3",name:"BeeVenom Care Gel 3",cost:35.37,keys:"3 броя,тройка"},
+  {id:"p4",name:"Пакет 3+2",cost:24.89,keys:"3+2,пакет"},
+  {id:"p5",name:"Образователни карти НВО",cost:22.18,keys:"карти,нво"},
+  {id:"p6",name:"Пчелна отрова крем 1бр",cost:10.11,keys:"крем,1 бр"},
+  {id:"p7",name:"Пчелна отрова крем 3бр",cost:19.90,keys:"крем,3 бр"},
+  {id:"p8",name:"Пчелна отрова Gel 2+1",cost:19.80,keys:"2+1 крем"},
+  {id:"p9",name:"Спрей за гъбички",cost:5.90,keys:"спрей,гъбички"},
+  {id:"p10",name:"Пластир пчелна отрова",cost:5.90,keys:"пластир"},
+  {id:"p11",name:"Хиалуронов крем",cost:17.90,keys:"хиалурон,крем"},
+  {id:"p12",name:"Крем конски кестен",cost:5.90,keys:"кестен"},
+  {id:"p13",name:"Тест НВО PDF",cost:5.30,keys:"тест,pdf"},
+  {id:"p14",name:"Пробна матура PDF",cost:5.30,keys:"матура,pdf"},
+  {id:"p15",name:"30 въпроса литература",cost:4.69,keys:"30 въпроса"}
+];
 const S = Object.assign({
   token:"", apiVersion:"v25.0",
-  accounts: clone(DEFAULT_ACCOUNTS), products: [],
+  accounts: clone(DEFAULT_ACCOUNTS), products: clone(DEFAULT_PRODUCTS),
   corr: {},                       // "acct|YYYY-MM-DD" -> {o,r,x}
   monthlyCosts: {insurance:190, accounting:100, middleware:130, claude:100, chatgpt:100, convertBuilder:90},
   ui: {period:"today", from:null, to:null, acct:"all", product:"all", tab:"home"}
